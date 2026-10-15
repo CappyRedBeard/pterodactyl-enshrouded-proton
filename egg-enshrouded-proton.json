@@ -1,0 +1,134 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PTERODACTYL PANEL - PTERODACTYL.IO",
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://raw.githubusercontent.com/CappyRedBeard/pterodactyl-enshrouded-proton/main/egg-enshrouded-proton.json"
+    },
+    "exported_at": "2026-10-15T00:00:00+01:00",
+    "name": "Enshrouded (Ubuntu 24.04 + GE-Proton 11)",
+    "author": "8750195+CappyRedBeard@users.noreply.github.com",
+    "description": "Enshrouded dedicated server using a pinned Ubuntu 24.04 and GE-Proton 11 runtime. This resolves the SteamUtils011 startup failure seen with the previous Debian Bookworm Proton runtime.",
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "Ubuntu 24.04 + GE-Proton 11 (stable)": "ghcr.io/cappyredbeard/pterodactyl-enshrouded-proton:stable"
+    },
+    "file_denylist": [],
+    "startup": "mkdir -p .\/logs; rm -f .\/logs\/enshrouded_server.log; touch .\/logs\/enshrouded_server.log; proton run .\/enshrouded_server.exe & ENS_PID=$!; tail -c0 -F .\/logs\/enshrouded_server.log --pid=$ENS_PID",
+    "config": {
+        "files": "{\n    \"enshrouded_server.json\": {\n        \"parser\": \"json\",\n        \"find\": {\n            \"name\": \"{{server.build.env.SRV_NAME}}\",\n            \"queryPort\": \"{{server.build.default.port}}\",\n            \"slotCount\": \"{{server.build.env.MAX_PLAYERS}}\",\n            \"userGroups[0].password\": \"{{server.build.env.SRV_PW}}\",\n            \"userGroups[1].name\": \"Friend\",\n            \"userGroups[1].password\": \"{{server.build.env.SRV_PW2}}\",\n            \"userGroups[2].name\": \"Guest\",\n            \"userGroups[2].password\": \"{{server.build.env.SRV_PW3}}\",\n            \"userGroups[3].name\": \"Visitor\",\n            \"userGroups[3].password\": \"{{server.build.env.SRV_PW4}}\"\n        }\n    }\n}",
+        "startup": "{\n    \"done\": \"[Session] 'HostOnline' (up)!\"\n}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\nset -e\n\nif [[ -z \"${STEAM_USER}\" || -z \"${STEAM_PASS}\" ]]; then\n    STEAM_USER=anonymous\n    STEAM_PASS=\"\"\n    STEAM_AUTH=\"\"\nfi\n\nmkdir -p \/mnt\/server\/steamcmd \/mnt\/server\/steamapps\ncd \/tmp\ncurl -sSL -o steamcmd.tar.gz https:\/\/steamcdn-a.akamaihd.net\/client\/installer\/steamcmd_linux.tar.gz\ntar -xzf steamcmd.tar.gz -C \/mnt\/server\/steamcmd\nchown -R root:root \/mnt\nexport HOME=\/mnt\/server\ncd \/mnt\/server\/steamcmd\n.\/steamcmd.sh +force_install_dir \/mnt\/server +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} $( [[ \"${WINDOWS_INSTALL}\" == \"1\" ]] && printf %s '+@sSteamCmdForcePlatformType windows' ) +app_update ${SRCDS_APPID} $( [[ -z ${SRCDS_BETAID} ]] || printf %s \"-beta ${SRCDS_BETAID}\" ) $( [[ -z ${SRCDS_BETAPASS} ]] || printf %s \"-betapassword ${SRCDS_BETAPASS}\" ) ${INSTALL_FLAGS} validate +quit\n\nmkdir -p \/mnt\/server\/.steam\/sdk32 \/mnt\/server\/.steam\/sdk64\ncp -v linux32\/steamclient.so \/mnt\/server\/.steam\/sdk32\/steamclient.so\ncp -v linux64\/steamclient.so \/mnt\/server\/.steam\/sdk64\/steamclient.so\n\nif [[ ! -f \/mnt\/server\/enshrouded_server.json ]]; then\n    curl -sSL -o \/mnt\/server\/enshrouded_server.json https:\/\/raw.githubusercontent.com\/Ptero-Eggs\/game-eggs\/refs\/heads\/main\/enshrouded\/enshrouded_server.json\nfi\n\necho \"Installation completed\"",
+            "container": "ghcr.io\/ptero-eggs\/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "[SERVER] Server Name",
+            "description": "Name of the server",
+            "env_variable": "SRV_NAME",
+            "default_value": "My Enshrouded Server",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string",
+            "field_type": "text"
+        },
+        {
+            "name": "[SERVER] Max Players",
+            "description": "Maximum number of players allowed",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "16",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|numeric|min:1|max:16",
+            "field_type": "text"
+        },
+        {
+            "name": "[USER GROUP] Admin Group Password",
+            "description": "Password granting full administrator permissions. It cannot be empty or only numerical.",
+            "env_variable": "SRV_PW",
+            "default_value": "ChangeMe1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|not_regex:\/^\\d+$\/",
+            "field_type": "text"
+        },
+        {
+            "name": "[USER GROUP] Friend Group Password",
+            "description": "Password granting inventory and building permissions without kick or ban. It cannot be empty or only numerical.",
+            "env_variable": "SRV_PW2",
+            "default_value": "ChangeMe2",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|not_regex:\/^\\d+$\/",
+            "field_type": "text"
+        },
+        {
+            "name": "[USER GROUP] Guest Group Password",
+            "description": "Password for the restricted Guest group. It cannot be empty or only numerical.",
+            "env_variable": "SRV_PW3",
+            "default_value": "ChangeMe3",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|not_regex:\/^\\d+$\/",
+            "field_type": "text"
+        },
+        {
+            "name": "[USER GROUP] Visitor Group Password",
+            "description": "Password for the most restricted Visitor group. It cannot be empty or only numerical.",
+            "env_variable": "SRV_PW4",
+            "default_value": "ChangeMe4",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|not_regex:\/^\\d+$\/",
+            "field_type": "text"
+        },
+        {
+            "name": "[STEAM] Steam App ID",
+            "description": "Enshrouded Dedicated Server Steam App ID",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "2278520",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|string|in:2278520",
+            "field_type": "text"
+        },
+        {
+            "name": "[SYSTEM] Windows Install",
+            "description": "Install the Windows server for execution through Proton",
+            "env_variable": "WINDOWS_INSTALL",
+            "default_value": "1",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": "required|boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "[SYSTEM] Auto Update",
+            "description": "Run SteamCMD update whenever the server container starts",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|boolean",
+            "field_type": "text"
+        },
+        {
+            "name": "[SYSTEM] Validate",
+            "description": "Validate the server files during SteamCMD update",
+            "env_variable": "VALIDATE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|boolean",
+            "field_type": "text"
+        }
+    ]
+}
