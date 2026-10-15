@@ -4,6 +4,8 @@ A reproducible Pterodactyl runtime and egg for the Windows-only Enshrouded dedic
 
 The upstream Pterodactyl Enshrouded egg currently uses a Debian Bookworm Proton image. Enshrouded 1.0 introduced a Steamworks runtime requirement that failed there with `No SteamUtils011`. This image moves the runtime to Ubuntu 24.04 (glibc 2.39) and pins GE-Proton 11-9 with a SHA-512 checksum.
 
+The entrypoint also exports the Steam compatibility app ID explicitly. GE-Proton 11 can otherwise leave a fresh prefix waiting in its Steam launch shim before the Enshrouded executable is mapped.
+
 ## Compatibility
 
 Validated on 15 October 2026 with:

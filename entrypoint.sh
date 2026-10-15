@@ -14,6 +14,12 @@ if [ -f "/usr/local/bin/proton" ]; then
         mkdir -p "/home/container/.steam/steam/steamapps/compatdata/${SRCDS_APPID}"
         export STEAM_COMPAT_CLIENT_INSTALL_PATH="/home/container/.steam/steam"
         export STEAM_COMPAT_DATA_PATH="/home/container/.steam/steam/steamapps/compatdata/${SRCDS_APPID}"
+        # GE-Proton 11's built-in Steam launch shim needs the application ID
+        # explicitly. Without these variables a fresh prefix can wait forever
+        # before the target executable is mapped.
+        export STEAM_COMPAT_APP_ID="${SRCDS_APPID}"
+        export SteamAppId="${SRCDS_APPID}"
+        export SteamGameId="${SRCDS_APPID}"
     else
         echo "SRCDS_APPID is required when using Proton"
         exit 1
